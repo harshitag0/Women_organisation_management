@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 dotenv.config();
 
 const User = require('./models/User');
-const Product = require('./models/Product');
 const Event = require('./models/Event');
 
 mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/sakhiconnect')
@@ -14,137 +13,92 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/sakhiconnec
 
 const importData = async () => {
   try {
+    // Only clear non-product/order data to preserve real marketplace data
     await User.deleteMany();
-    await Product.deleteMany();
     await Event.deleteMany();
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
+    const memberPassword = await bcrypt.hash('member123', salt);
 
-    const createdUsers = await User.insertMany([
-      { name: 'Admin User',        username: 'admin',   email: 'admin@sakhiconnect.in', password: hashedPassword, role: 'Admin' },
-      { name: 'Savitri Bachatgat', username: 'bg123',   email: 'bg@sakhiconnect.in',    password: hashedPassword, role: 'Bachatgat', president_name: 'Savitri Patil' },
-      { name: 'Priya Member',      username: 'member1', email: 'priya@example.com',     password: hashedPassword, role: 'Member',    address: 'Pune' },
-      { name: 'Anjali Customer',   username: 'cust1',   email: 'anjali@example.com',    password: hashedPassword, role: 'Customer',  address: 'Mumbai' },
-    ]);
-
-    const bachatgatUser = createdUsers[1]._id;
-    const adminUser     = createdUsers[0]._id;
-
-    await Product.insertMany([
-      // FOOD
+    // ─── System Users ───
+    const systemUsers = await User.insertMany([
       {
-        name: 'Handmade Papads',
-        description: 'Sun-dried urad dal papads, crispy and flavourful. Made using traditional recipes passed down through generations.',
-        category: 'Food', price: 120, quantity: 80, unit: 'pack',
-        image_url: '/product-food.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Mixed Vegetable Pickle',
-        description: 'Tangy homemade mixed vegetable pickle prepared with fresh seasonal vegetables and natural spices.',
-        category: 'Food', price: 180, quantity: 60, unit: 'jar',
-        image_url: '/product-food.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Masala Spice Blend',
-        description: 'Aromatic homemade garam masala blend with no artificial preservatives. Pure and natural.',
-        category: 'Food', price: 95, quantity: 100, unit: '100g pack',
-        image_url: '/product-food.png', bachatgat_id: bachatgatUser,
-      },
-
-      // CRAFTS
-      {
-        name: 'Jute Shopping Bag',
-        description: 'Eco-friendly handwoven jute bag with cotton handles. Strong, durable, and reusable.',
-        category: 'Crafts', price: 220, quantity: 50, unit: 'piece',
-        image_url: '/product-crafts.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Macrame Wall Hanging',
-        description: 'Handcrafted boho-style macrame wall decor made from natural cotton cord.',
-        category: 'Crafts', price: 450, quantity: 25, unit: 'piece',
-        image_url: '/product-crafts.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Woven Bamboo Basket',
-        description: 'Hand-woven bamboo basket, ideal for storage or gifting. Sustainable and long-lasting.',
-        category: 'Crafts', price: 310, quantity: 40, unit: 'piece',
-        image_url: '/product-crafts.png', bachatgat_id: bachatgatUser,
-      },
-
-      // TEXTILES
-      {
-        name: 'Block Print Cotton Dupatta',
-        description: 'Hand block-printed cotton dupatta with natural vegetable dyes. Each piece is uniquely crafted.',
-        category: 'Textiles', price: 550, quantity: 30, unit: 'piece',
-        image_url: '/product-textiles.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Handwoven Khadi Saree',
-        description: 'Pure khadi cotton saree with traditional border. Comfortable, breathable, and elegant.',
-        category: 'Textiles', price: 1200, quantity: 15, unit: 'piece',
-        image_url: '/product-textiles.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Embroidered Cushion Cover',
-        description: 'Hand-embroidered cushion cover with floral motifs. Adds colour and personality to your living space.',
-        category: 'Textiles', price: 280, quantity: 60, unit: 'piece',
-        image_url: '/product-textiles.png', bachatgat_id: bachatgatUser,
-      },
-
-      // BEAUTY
-      {
-        name: 'Turmeric Face Pack',
-        description: 'Natural turmeric and sandalwood face pack. Brightens skin and gives a natural glow.',
-        category: 'Beauty', price: 150, quantity: 70, unit: '50g jar',
-        image_url: '/product-beauty.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Herbal Hair Oil',
-        description: 'Blend of bhringraj, amla, and coconut oil. Promotes hair growth and reduces hair fall naturally.',
-        category: 'Beauty', price: 200, quantity: 55, unit: '100ml bottle',
-        image_url: '/product-beauty.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Neem & Rose Soap',
-        description: 'Handcrafted cold-process soap with neem extract and rose water. Gentle on skin, chemical-free.',
-        category: 'Beauty', price: 80, quantity: 120, unit: 'bar',
-        image_url: '/product-beauty.png', bachatgat_id: bachatgatUser,
-      },
-
-      // HOME DECOR
-      {
-        name: 'Hand-Painted Clay Diyas (Set of 6)',
-        description: 'Set of 6 hand-painted terracotta diyas with traditional patterns. Perfect for home and gifting.',
-        category: 'Home Decor', price: 180, quantity: 90, unit: 'set of 6',
-        image_url: '/product-homedecor.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Terracotta Planter Pot',
-        description: 'Handmade terracotta pot with drainage hole. Ideal for indoor plants and succulents.',
-        category: 'Home Decor', price: 250, quantity: 45, unit: 'piece',
-        image_url: '/product-homedecor.png', bachatgat_id: bachatgatUser,
-      },
-      {
-        name: 'Wooden Coaster Set (Set of 4)',
-        description: 'Set of 4 hand-painted wooden coasters with floral designs. Protects surfaces in style.',
-        category: 'Home Decor', price: 320, quantity: 35, unit: 'set of 4',
-        image_url: '/product-homedecor.png', bachatgat_id: bachatgatUser,
+        name: 'Admin',
+        username: 'admin',
+        email: 'admin@krantijyoti.in',
+        password: hashedPassword,
+        role: 'Admin',
+        address: 'Nagpur, Maharashtra',
       },
     ]);
 
+    const adminUser = systemUsers[0]._id;
+
+    // ─── 30 Real Krantijyoti Mahila Gat Members ───
+    const members = [
+      { srNo: 1,  name: 'Sunita Patil',      age: 35, contact_no: '9876543210', group_role: 'President',  savings: 12000 },
+      { srNo: 2,  name: 'Rekha Sharma',      age: 32, contact_no: '9876543211', group_role: 'Secretary',  savings: 10500 },
+      { srNo: 3,  name: 'Asha Verma',        age: 29, contact_no: '9876543212', group_role: 'Treasurer',  savings: 9800  },
+      { srNo: 4,  name: 'Pooja Deshmukh',    age: 31, contact_no: '9876543213', group_role: 'Member',     savings: 8500  },
+      { srNo: 5,  name: 'Meena Joshi',       age: 38, contact_no: '9876543214', group_role: 'Member',     savings: 11200 },
+      { srNo: 6,  name: 'Kavita Thakur',     age: 27, contact_no: '9876543215', group_role: 'Member',     savings: 7600  },
+      { srNo: 7,  name: 'Rani Gupta',        age: 34, contact_no: '9876543216', group_role: 'Member',     savings: 9900  },
+      { srNo: 8,  name: 'Anita Yadav',       age: 30, contact_no: '9876543217', group_role: 'Member',     savings: 8100  },
+      { srNo: 9,  name: 'Priya Tiwari',      age: 28, contact_no: '9876543218', group_role: 'Member',     savings: 7200  },
+      { srNo: 10, name: 'Neha Kale',         age: 33, contact_no: '9876543219', group_role: 'Member',     savings: 9400  },
+      { srNo: 11, name: 'Manisha Pawar',     age: 36, contact_no: '9876543220', group_role: 'Member',     savings: 11800 },
+      { srNo: 12, name: 'Sneha More',        age: 26, contact_no: '9876543221', group_role: 'Member',     savings: 6800  },
+      { srNo: 13, name: 'Shweta Kulkarni',   age: 29, contact_no: '9876543222', group_role: 'Member',     savings: 7500  },
+      { srNo: 14, name: 'Vaishali Patode',   age: 40, contact_no: '9876543223', group_role: 'Member',     savings: 13000 },
+      { srNo: 15, name: 'Deepa Chavan',      age: 37, contact_no: '9876543224', group_role: 'Member',     savings: 11500 },
+      { srNo: 16, name: 'Lata Ingle',        age: 41, contact_no: '9876543225', group_role: 'Member',     savings: 12500 },
+      { srNo: 17, name: 'Komal Borse',       age: 24, contact_no: '9876543226', group_role: 'Member',     savings: 6000  },
+      { srNo: 18, name: 'Bharti Jaiswal',    age: 30, contact_no: '9876543227', group_role: 'Member',     savings: 8200  },
+      { srNo: 19, name: 'Nisha Gawande',     age: 28, contact_no: '9876543228', group_role: 'Member',     savings: 7100  },
+      { srNo: 20, name: 'Geeta Sahu',        age: 39, contact_no: '9876543229', group_role: 'Member',     savings: 11900 },
+      { srNo: 21, name: 'Alka Wankhede',     age: 35, contact_no: '9876543230', group_role: 'Member',     savings: 10100 },
+      { srNo: 22, name: 'Rupa Bagde',        age: 27, contact_no: '9876543231', group_role: 'Member',     savings: 7400  },
+      { srNo: 23, name: 'Savita Bansod',     age: 34, contact_no: '9876543232', group_role: 'Member',     savings: 9200  },
+      { srNo: 24, name: 'Jyoti Meshram',     age: 31, contact_no: '9876543233', group_role: 'Member',     savings: 8600  },
+      { srNo: 25, name: 'Sarika Pande',      age: 29, contact_no: '9876543234', group_role: 'Member',     savings: 7900  },
+      { srNo: 26, name: 'Usha Dhote',        age: 42, contact_no: '9876543235', group_role: 'Member',     savings: 13500 },
+      { srNo: 27, name: 'Mamta Kadu',        age: 33, contact_no: '9876543236', group_role: 'Member',     savings: 9700  },
+      { srNo: 28, name: 'Varsha Kapse',      age: 26, contact_no: '9876543237', group_role: 'Member',     savings: 6900  },
+      { srNo: 29, name: 'Seema Dongre',      age: 37, contact_no: '9876543238', group_role: 'Member',     savings: 11000 },
+      { srNo: 30, name: 'Archana Bhadke',    age: 32, contact_no: '9876543239', group_role: 'Member',     savings: 8900  },
+    ];
+
+    const memberDocs = members.map(m => ({
+      role: 'Member',
+      name: m.name,
+      username: m.name.toLowerCase().replace(/\s+/g, '.') + m.srNo,
+      password: memberPassword,
+      contact_no: m.contact_no,
+      age: m.age,
+      group_role: m.group_role,
+      savings: m.savings,
+      address: 'Nagpur, Maharashtra',
+    }));
+
+    await User.insertMany(memberDocs);
+
+    // ─── Sample Event ───
     await Event.insertMany([
       {
-        title: 'Annual SHG Meetup',
-        description: 'Gathering of all self-help groups for annual review and planning.',
-        location: 'Main Community Hall, Pune',
-        date: new Date('2026-04-10'),
+        title: 'Monthly Krantijyoti Mahila Gat Meeting',
+        description: 'Monthly meeting for all group members to discuss savings, loans and upcoming events.',
+        location: 'Community Hall, Nagpur',
+        date: new Date('2026-05-01'),
         admin_id: adminUser,
       },
     ]);
 
-    console.log('Data imported successfully!');
-    console.log('Credentials -- Admin: admin/password123 | Bachatgat: bg123/password123 | Member: member1/password123 | Customer: cust1/password123');
+    console.log('\n✅ Data imported successfully!');
+    console.log('─────────────────────────────────────────');
+    console.log('Admin     → username: admin       | password: password123');
+    console.log('Members   → username: sunita.patil1 etc. | password: member123');
+    console.log('─────────────────────────────────────────\n');
     process.exit();
   } catch (error) {
     console.error(`Error: ${error}`);

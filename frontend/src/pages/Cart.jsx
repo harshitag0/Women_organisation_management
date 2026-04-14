@@ -37,26 +37,90 @@ const Cart = () => {
   const subtotal = cartItems.reduce((acc, x) => acc + x.quantity * x.price, 0);
   const totalItems = cartItems.reduce((acc, x) => acc + x.quantity, 0);
 
+  // Load Razorpay script dynamically
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) { resolve(true); return; }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
   const checkoutHandler = async () => {
     if (!userInfo) { navigate('/login'); return; }
     if (userInfo.role !== 'Customer') { setMsg({ type: 'err', text: 'Only customers can place an order.' }); return; }
     if (!address || !city) { setMsg({ type: 'err', text: 'Please enter shipping address and city.' }); return; }
 
     setPlacing(true); setMsg({ type: '', text: '' });
+
+    // 1. Load Razorpay script
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      setMsg({ type: 'err', text: 'Failed to load payment gateway. Check your internet connection.' });
+      setPlacing(false); return;
+    }
+
     try {
       const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
-      await axios.post('/api/orders', {
-        items: cartItems.map(x => ({ product_id: x.product_id, quantity: x.quantity, price: x.price })),
-        shipping_address: address, city, total_amount: subtotal,
-      }, config);
-      localStorage.removeItem('cartItems');
-      setCartItems([]);
-      setMsg({ type: 'ok', text: 'Order placed successfully! Redirecting to your dashboard…' });
-      setTimeout(() => navigate('/customer'), 2000);
+
+      // 2. Create Razorpay order on backend
+      const { data } = await axios.post('/api/payment/create-order', { total_amount: subtotal }, config);
+
+      // 3. Open Razorpay checkout modal
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Krantijyoti Mahila Gat',
+        description: 'Handmade Products Marketplace',
+        order_id: data.order_id,
+        handler: async (response) => {
+          // 4. Verify payment on backend & save order
+          try {
+            await axios.post('/api/payment/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              items: cartItems.map(x => ({ product_id: x.product_id, quantity: x.quantity, price: x.price })),
+              shipping_address: address,
+              city,
+              total_amount: subtotal,
+            }, config);
+            localStorage.removeItem('cartItems');
+            setCartItems([]);
+            setMsg({ type: 'ok', text: '✅ Payment successful! Order placed. Redirecting to your dashboard…' });
+            setTimeout(() => navigate('/customer'), 2500);
+          } catch (err) {
+            setMsg({ type: 'err', text: err.response?.data?.message || 'Payment verified but order save failed. Contact support.' });
+          }
+          setPlacing(false);
+        },
+        prefill: {
+          name: userInfo.name || '',
+          email: userInfo.email || '',
+          contact: userInfo.contact_no || '',
+        },
+        theme: { color: '#c2185b' },
+        modal: {
+          ondismiss: () => {
+            setMsg({ type: 'err', text: 'Payment cancelled. You can try again.' });
+            setPlacing(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response) => {
+        setMsg({ type: 'err', text: `Payment failed: ${response.error.description}` });
+        setPlacing(false);
+      });
+      rzp.open();
     } catch (err) {
       setMsg({ type: 'err', text: err.response?.data?.message || 'Something went wrong. Please try again.' });
+      setPlacing(false);
     }
-    setPlacing(false);
   };
 
   return (
@@ -185,7 +249,16 @@ const Cart = () => {
                   onMouseEnter={e => { if (!placing) e.currentTarget.style.background = 'linear-gradient(135deg,#880e4f,#ad1457)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#c2185b,#d81b60)'; }}
                 >
-                  {placing ? 'Placing Order…' : 'Proceed to Checkout'}
+                  {placing ? (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <span style={{ width: 16, height: 16, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }}></span>
+                      Opening Payment…
+                    </span>
+                  ) : (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <span>🔒</span> Pay with Razorpay
+                    </span>
+                  )}
                 </button>
 
                 <div style={s.secureBadge}>
@@ -201,6 +274,7 @@ const Cart = () => {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         input:focus { outline: none; border-color: #c2185b !important; box-shadow: 0 0 0 3px rgba(194,24,91,0.08); }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

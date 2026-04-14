@@ -3,106 +3,104 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+/* ─── Navigation — Savings & All Members removed ─── */
 const NAV_ITEMS = [
-  { key: 'dashboard', icon: '📊', label: 'Dashboard' },
-  { key: 'myOrders', icon: '🛒', label: 'My Orders' },
-  { key: 'addProduct', icon: '➕', label: 'Add Product' },
-  { key: 'myProducts', icon: '📦', label: 'My Products' },
-  { key: 'loans', icon: '💰', label: 'My Loans' },
-  { key: 'savings', icon: '💵', label: 'Savings' },
-  { key: 'members', icon: '👥', label: 'All Members' },
+  { key: 'dashboard',  label: 'Dashboard'   },
+  { key: 'myOrders',   label: 'Orders Received' },
+  { key: 'addProduct', label: 'Add Product' },
+  { key: 'myProducts', label: 'My Products' },
+  { key: 'loans',      label: 'My Loans'    },
 ];
+
+/* ─── Design tokens ─── */
+const c = {
+  bg:      '#f5f5f5',
+  surface: '#ffffff',
+  border:  '#e4e4e7',
+  text:    '#18181b',
+  sub:     '#71717a',
+  faint:   '#a1a1aa',
+  accent:  '#18181b',
+  hover:   '#fafafa',
+  teal:    '#0d9488',   // subtle teal only for stat tops
+  badgeMap: {
+    Pending:    { bg: '#fef3c7', c: '#92400e' },
+    Processing: { bg: '#ede9fe', c: '#4c1d95' },
+    Shipped:    { bg: '#d1fae5', c: '#065f46' },
+    Delivered:  { bg: '#d1fae5', c: '#065f46' },
+    Cancelled:  { bg: '#fee2e2', c: '#991b1b' },
+    Approved:   { bg: '#d1fae5', c: '#065f46' },
+    Rejected:   { bg: '#fee2e2', c: '#991b1b' },
+    Closed:     { bg: '#f4f4f5', c: '#71717a' },
+    Completed:  { bg: '#d1fae5', c: '#065f46' },
+    Failed:     { bg: '#fee2e2', c: '#991b1b' },
+  },
+};
 
 const MemberDashboard = () => {
   const { userInfo, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  
-  const [activeNav, setActiveNav] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  // State for various data
-  const [loans, setLoans] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [savings, setSavings] = useState([]);
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalProducts: 0,
-    totalSavings: 0,
-    activeLoan: 0
-  });
-  
-  // Form states
-  const [loanAmount, setLoanAmount] = useState('');
-  const [loanReason, setLoanReason] = useState('');
-  const [loanMsg, setLoanMsg] = useState('');
-  
-  const [productName, setProductName] = useState('');
-  const [productPrice, setProductPrice] = useState('');
-  const [productCategory, setProductCategory] = useState('');
-  const [productDesc, setProductDesc] = useState('');
-  const [productMsg, setProductMsg] = useState('');
 
-  useEffect(() => {
-    fetchAllData();
-  }, [userInfo]);
+  const [activeNav,    setActiveNav]    = useState('dashboard');
+  const [sidebarOpen,  setSidebarOpen]  = useState(true);
+
+  const [loans,        setLoans]        = useState([]);
+  const [sellerOrders, setSellerOrders] = useState([]);   // orders from customers for MY products
+  const [products,     setProducts]     = useState([]);
+  const [stats,        setStats]        = useState({ totalOrders: 0, totalProducts: 0, activeLoan: 0 });
+
+  /* form states */
+  const [loanAmount,       setLoanAmount]       = useState('');
+  const [loanReason,       setLoanReason]       = useState('');
+  const [loanMsg,          setLoanMsg]          = useState('');
+  const [productName,      setProductName]      = useState('');
+  const [productPrice,     setProductPrice]     = useState('');
+  const [productCategory,  setProductCategory]  = useState('');
+  const [productDesc,      setProductDesc]      = useState('');
+  const [productQty,       setProductQty]       = useState('10');
+  const [productMsg,       setProductMsg]       = useState('');
+
+  useEffect(() => { if (userInfo) fetchAllData(); }, [userInfo]);
 
   const fetchAllData = async () => {
+    if (!userInfo) return;
     try {
-      const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-      
-      const [loansRes, ordersRes, productsRes, membersRes] = await Promise.all([
-        axios.get('/api/loans/myloans', config).catch(() => ({ data: [] })),
-        axios.get('/api/orders/myorders', config).catch(() => ({ data: [] })),
-        axios.get('/api/products/myproducts', config).catch(() => ({ data: [] })),
-        axios.get('/api/members', config).catch(() => ({ data: [] }))
+      const cfg = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+      const [loansRes, sellerOrdersRes, productsRes] = await Promise.all([
+        axios.get('/api/loans/myloans',         cfg).catch(() => ({ data: [] })),
+        axios.get('/api/orders/seller-orders',  cfg).catch(() => ({ data: [] })),
+        axios.get('/api/products/myproducts',   cfg).catch(() => ({ data: [] })),
       ]);
-      
+
       setLoans(loansRes.data);
-      setOrders(ordersRes.data);
+      setSellerOrders(sellerOrdersRes.data);
       setProducts(productsRes.data);
-      setMembers(membersRes.data);
-      
-      // Calculate stats
+
       const activeLoan = loansRes.data.find(l => l.status === 'Approved');
       setStats({
-        totalOrders: ordersRes.data.length,
+        totalOrders:   sellerOrdersRes.data.length,
         totalProducts: productsRes.data.length,
-        totalSavings: 0, // Will be calculated from savings API
-        activeLoan: activeLoan ? activeLoan.approved_amount : 0
+        activeLoan:    activeLoan ? activeLoan.approved_amount : 0,
       });
     } catch (err) {
       console.error('Error fetching data:', err);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   const submitLoan = async (e) => {
     e.preventDefault();
     setLoanMsg('');
     try {
-      const config = { 
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${userInfo?.token}` 
-        } 
-      };
-      
-      const loanData = {
-        bachatgat_id: userInfo.bachatgat_id || '661e4b8f0f00000000000000',
+      const cfg = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo?.token}` } };
+      await axios.post('/api/loans', {
+        bachatgat_id: userInfo.bachatgat_id || userInfo._id,
         loan_amount_required: loanAmount,
-        reason: loanReason
-      };
-      
-      await axios.post('/api/loans', loanData, config);
-      setLoanMsg('success:Loan application submitted successfully!');
-      setLoanAmount('');
-      setLoanReason('');
+        reason: loanReason,
+      }, cfg);
+      setLoanMsg('success:Loan application submitted successfully.');
+      setLoanAmount(''); setLoanReason('');
       fetchAllData();
     } catch (err) {
       setLoanMsg('error:' + (err.response?.data?.message || 'Error submitting loan'));
@@ -113,392 +111,283 @@ const MemberDashboard = () => {
     e.preventDefault();
     setProductMsg('');
     try {
-      console.log('=== Submitting Product ===');
-      console.log('User Info:', userInfo);
-      
-      const config = { 
-        headers: { 
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${userInfo?.token}` 
-        } 
-      };
-      
-      const productData = {
+      const cfg = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo?.token}` } };
+      await axios.post('/api/products', {
         name: productName,
         price: productPrice,
         category: productCategory,
         description: productDesc,
-        quantity: 10, // Default quantity
-        unit: 'piece' // Default unit
-      };
-      
-      console.log('Product Data:', productData);
-      
-      const response = await axios.post('/api/products', productData, config);
-      console.log('Response:', response.data);
-      
+        quantity: productQty || 10,
+        unit: 'piece',
+      }, cfg);
       setProductMsg('success:Product added successfully!');
-      setProductName('');
-      setProductPrice('');
-      setProductCategory('');
-      setProductDesc('');
-      fetchAllData();
-      
-      // Optionally switch to My Products view after 2 seconds
-      setTimeout(() => {
-        setActiveNav('myProducts');
-      }, 2000);
+      setProductName(''); setProductPrice(''); setProductCategory(''); setProductDesc(''); setProductQty('10');
+      await fetchAllData();            // refresh immediately so My Products updates
+      setTimeout(() => { setActiveNav('myProducts'); }, 1200);
     } catch (err) {
-      console.error('Product submission error:', err);
-      console.error('Error response:', err.response?.data);
       setProductMsg('error:' + (err.response?.data?.message || 'Error adding product'));
     }
   };
 
-  /* ─── Styles ─── */
+  /* ─── Style objects ─── */
   const S = {
     shell: {
-      display: 'flex',
-      minHeight: '100vh',
-      background: '#f5f6fa',
-      fontFamily: "'Inter', sans-serif",
+      display: 'flex', minHeight: '100vh',
+      background: c.bg,
+      fontFamily: "'Inter','Segoe UI',system-ui,sans-serif",
+      fontSize: 13.5, color: c.text,
     },
     sidebar: {
-      width: sidebarOpen ? 220 : 64,
-      background: '#fff',
-      borderRight: '1.5px solid #e0f2f1',
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'width .28s ease',
-      overflow: 'hidden',
-      flexShrink: 0,
-      boxShadow: '2px 0 16px rgba(0,150,136,0.05)',
-      position: 'sticky',
-      top: 0,
-      height: '100vh',
+      width: sidebarOpen ? 210 : 52,
+      background: c.surface, borderRight: `1px solid ${c.border}`,
+      display: 'flex', flexDirection: 'column',
+      transition: 'width .22s ease', overflow: 'hidden',
+      flexShrink: 0, position: 'sticky', top: 0, height: '100vh',
     },
-    logo: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      padding: '24px 18px 18px',
-      borderBottom: '1.5px solid #e0f2f1',
+    sideHeader: {
+      height: 52, display: 'flex', alignItems: 'center',
+      padding: '0 16px', borderBottom: `1px solid ${c.border}`,
+      overflow: 'hidden', flexShrink: 0,
     },
-    logoIcon: {
-      width: 36,
-      height: 36,
-      background: 'linear-gradient(135deg, #00897b, #26a69a)',
-      borderRadius: 10,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#fff',
-      fontWeight: 800,
-      fontSize: 15,
-      flexShrink: 0,
+    brandText: {
+      fontWeight: 700, fontSize: 14.5, color: c.text,
+      letterSpacing: -.3, whiteSpace: 'nowrap',
     },
-    logoText: {
-      fontWeight: 800,
-      fontSize: 15,
-      color: '#004d40',
-      whiteSpace: 'nowrap',
-      fontFamily: "'Playfair Display', serif",
-    },
-    navSection: { flex: 1, padding: '16px 10px', overflowY: 'auto' },
+    navSection: { flex: 1, padding: '10px 6px', overflowY: 'auto' },
     navItem: (active) => ({
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-      padding: '11px 12px',
-      borderRadius: 10,
-      cursor: 'pointer',
-      marginBottom: 4,
-      background: active ? 'linear-gradient(90deg, #e0f2f1, #fff)' : 'transparent',
-      color: active ? '#00897b' : '#455a64',
-      fontWeight: active ? 700 : 500,
-      fontSize: 13.5,
-      transition: '.18s',
-      border: active ? '1.5px solid #b2dfdb' : '1.5px solid transparent',
-      whiteSpace: 'nowrap',
+      display: 'block', width: '100%', textAlign: 'left',
+      padding: '9px 12px', borderRadius: 7, cursor: 'pointer', marginBottom: 1,
+      background: active ? c.bg : 'transparent',
+      color: active ? c.text : c.sub,
+      fontWeight: active ? 600 : 400, fontSize: 13,
+      border: 'none',
+      borderLeft: active ? `2px solid ${c.accent}` : '2px solid transparent',
+      whiteSpace: 'nowrap', overflow: 'hidden', transition: 'all .15s',
     }),
-    navIcon: { fontSize: 16, flexShrink: 0 },
-    navLabel: { opacity: sidebarOpen ? 1 : 0, transition: 'opacity .2s' },
-    navBottom: { padding: '12px 10px 20px', borderTop: '1.5px solid #e0f2f1' },
+    navFooter: { padding: '8px 6px 18px', borderTop: `1px solid ${c.border}` },
     main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 },
     topbar: {
-      background: '#fff',
-      borderBottom: '1.5px solid #e0f2f1',
-      padding: '14px 28px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+      height: 52, background: c.surface, borderBottom: `1px solid ${c.border}`,
+      padding: '0 24px', display: 'flex', alignItems: 'center',
+      justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100,
+    },
+    topLeft: { display: 'flex', alignItems: 'center', gap: 10 },
+    collapseBtn: {
+      background: 'none', border: `1px solid ${c.border}`,
+      borderRadius: 6, padding: '4px 8px',
+      cursor: 'pointer', color: c.sub, fontSize: 12, lineHeight: 1,
     },
     searchBar: {
-      display: 'flex',
-      alignItems: 'center',
-      background: '#e0f2f122',
-      border: '1.5px solid #b2dfdb',
-      borderRadius: 40,
-      padding: '7px 18px',
-      gap: 8,
-      width: 240,
+      display: 'flex', alignItems: 'center', gap: 8,
+      background: c.bg, border: `1px solid ${c.border}`,
+      borderRadius: 7, padding: '6px 14px', width: 240,
     },
     searchInput: {
-      border: 'none',
-      background: 'transparent',
-      outline: 'none',
-      fontSize: 13,
-      color: '#004d40',
-      width: '100%',
+      border: 'none', background: 'transparent', outline: 'none',
+      fontSize: 13, color: c.text, width: '100%', fontFamily: 'inherit',
     },
-    topRight: { display: 'flex', alignItems: 'center', gap: 16 },
-    bellBtn: {
-      width: 36, height: 36, borderRadius: 50,
-      background: '#e0f2f1',
-      border: 'none',
+    topRight: { display: 'flex', alignItems: 'center', gap: 10 },
+    avatarCircle: {
+      width: 32, height: 32, borderRadius: '50%',
+      background: c.accent, color: '#fff',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 16, cursor: 'pointer',
+      fontWeight: 700, fontSize: 12.5, cursor: 'pointer', border: 'none',
     },
-    avatar: {
-      width: 36, height: 36, borderRadius: 50,
-      background: 'linear-gradient(135deg,#00897b,#26a69a)',
-      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 700, fontSize: 14, cursor: 'pointer',
-    },
-    content: { padding: '28px 28px 48px', flex: 1, overflowY: 'auto' },
-    pageTitle: {
-      fontFamily: "'Playfair Display', serif",
-      fontWeight: 800, fontSize: 26, color: '#004d40', marginBottom: 4,
-    },
-    pageSub: { fontSize: 13, color: '#78909c', marginBottom: 28 },
+    content: { padding: '28px 30px 60px', flex: 1, overflowY: 'auto' },
+    pageHeading: { fontWeight: 700, fontSize: 21, color: c.text, marginBottom: 2 },
+    pageCrumb:   { fontSize: 12.5, color: c.sub, marginBottom: 26 },
     statsGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))',
-      gap: 18, marginBottom: 28,
+      display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(170px,1fr))',
+      gap: 14, marginBottom: 26,
     },
-    statCard: (accent) => ({
-      background: '#fff',
-      borderRadius: 16,
-      padding: '22px 24px',
-      border: '1.5px solid #e0f2f1',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-      transition: '.2s',
+    statCard: (idx) => ({
+      background: c.surface, borderRadius: 10,
+      border: `1px solid ${c.border}`, padding: '18px 20px 16px',
+      borderTop: `3px solid ${['#0d9488','#18181b','#ca8a04'][idx] || c.border}`,
     }),
-    statNum: (accent) => ({
-      fontFamily: "'Playfair Display', serif",
-      fontSize: 32, fontWeight: 800, color: accent, marginBottom: 2,
-    }),
-    statLabel: { fontSize: 12, color: '#78909c', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 },
-    statSub: { fontSize: 11, color: '#bbb', marginTop: 6 },
-    statIcon: (accent) => ({
-      width: 40, height: 40, borderRadius: 10,
-      background: accent + '18',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 18, marginBottom: 12,
-    }),
+    statNum:   { fontSize: 30, fontWeight: 700, color: c.text, lineHeight: 1, marginBottom: 4 },
+    statLabel: { fontSize: 10.5, color: c.sub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: .8 },
+    statSub:   { fontSize: 10.5, color: c.faint, marginTop: 3 },
     card: {
-      background: '#fff', borderRadius: 16,
-      border: '1.5px solid #e0f2f1',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-      overflow: 'hidden',
-      marginBottom: 20,
+      background: c.surface, borderRadius: 10,
+      border: `1px solid ${c.border}`, overflow: 'hidden', marginBottom: 20,
     },
     cardHeader: {
-      padding: '16px 22px',
-      borderBottom: '1.5px solid #e0f2f1',
-      fontWeight: 700, fontSize: 14.5, color: '#004d40',
+      padding: '14px 20px', borderBottom: `1px solid ${c.border}`,
+      fontWeight: 600, fontSize: 13.5, color: c.text,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     },
-    cardBody: { padding: 22 },
+    cardBody: { padding: '20px 20px' },
     table: { width: '100%', borderCollapse: 'collapse' },
     th: {
-      padding: '10px 14px', textAlign: 'left',
-      fontSize: 11, fontWeight: 700, color: '#78909c',
+      padding: '9px 14px', textAlign: 'left',
+      fontSize: 10, fontWeight: 700, color: c.faint,
       textTransform: 'uppercase', letterSpacing: .8,
-      borderBottom: '1.5px solid #e0f2f1',
+      borderBottom: `1px solid ${c.border}`,
     },
-    td: {
-      padding: '12px 14px', fontSize: 13.5, color: '#004d40',
-      borderBottom: '1px solid #e0f2f1',
+    td: { padding: '12px 14px', fontSize: 13, color: c.text, borderBottom: `1px solid ${c.border}` },
+    badge: (status) => {
+      const m = c.badgeMap[status] || { bg: '#f4f4f5', c: '#71717a' };
+      return { display: 'inline-block', padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600, background: m.bg, color: m.c };
     },
-    badge: (status) => ({
-      display: 'inline-block', padding: '3px 12px',
-      borderRadius: 40, fontSize: 11, fontWeight: 700,
-      background: status === 'Approved' || status === 'Delivered' ? '#e6f7f3' : 
-                  status === 'Rejected' || status === 'Cancelled' ? '#ffebee' : '#fff3e0',
-      color: status === 'Approved' || status === 'Delivered' ? '#00897b' : 
-             status === 'Rejected' || status === 'Cancelled' ? '#c62828' : '#ef6c00',
-    }),
     form: { display: 'flex', flexDirection: 'column', gap: 14 },
-    formRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
-    label: { fontSize: 12, fontWeight: 700, color: '#455a64', marginBottom: 4, display: 'block' },
+    formRow2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
+    label: { fontSize: 11, fontWeight: 600, color: c.sub, marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: .6 },
     input: {
-      width: '100%', padding: '10px 14px',
-      border: '1.5px solid #e0f2f1', borderRadius: 10,
-      fontSize: 13.5, color: '#004d40', outline: 'none',
-      background: '#f9fffe', fontFamily: 'inherit',
-      transition: '.15s',
-    },
-    textarea: {
-      width: '100%', padding: '10px 14px',
-      border: '1.5px solid #e0f2f1', borderRadius: 10,
-      fontSize: 13.5, color: '#004d40', outline: 'none',
-      background: '#f9fffe', fontFamily: 'inherit',
-      resize: 'vertical', minHeight: 80,
+      width: '100%', padding: '9px 12px', boxSizing: 'border-box',
+      border: `1px solid ${c.border}`, borderRadius: 7,
+      fontSize: 13, color: c.text, outline: 'none', background: c.bg, fontFamily: 'inherit',
     },
     select: {
-      width: '100%', padding: '10px 14px',
-      border: '1.5px solid #e0f2f1', borderRadius: 10,
-      fontSize: 13.5, color: '#004d40', outline: 'none',
-      background: '#f9fffe', fontFamily: 'inherit',
+      width: '100%', padding: '9px 12px', boxSizing: 'border-box',
+      border: `1px solid ${c.border}`, borderRadius: 7,
+      fontSize: 13, color: c.text, outline: 'none', background: c.bg, fontFamily: 'inherit',
     },
-    btnPrimary: {
-      background: 'linear-gradient(135deg,#00897b,#26a69a)',
-      color: '#fff', border: 'none', borderRadius: 10,
-      padding: '11px 28px', fontWeight: 700, fontSize: 14,
-      cursor: 'pointer', transition: '.18s', display: 'inline-flex',
-      alignItems: 'center', gap: 8,
+    textarea: {
+      width: '100%', padding: '9px 12px', boxSizing: 'border-box',
+      border: `1px solid ${c.border}`, borderRadius: 7,
+      fontSize: 13, color: c.text, outline: 'none', background: c.bg,
+      fontFamily: 'inherit', resize: 'vertical', minHeight: 78,
     },
-    alert: (type) => ({
-      padding: '10px 16px', borderRadius: 10, fontSize: 13,
-      background: type === 'success' ? '#e6f7f3' : '#ffebee',
-      color: type === 'success' ? '#00897b' : '#c62828',
-      border: `1px solid ${type === 'success' ? '#b2dfdb' : '#ffcdd2'}`,
-      marginBottom: 16,
+    btn: {
+      background: c.accent, color: '#fff', border: 'none', borderRadius: 7,
+      padding: '9px 20px', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+    },
+    btnOutline: {
+      background: 'transparent', color: c.text,
+      border: `1px solid ${c.border}`, borderRadius: 7,
+      padding: '7px 14px', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+    },
+    alert: (t) => ({
+      padding: '10px 14px', borderRadius: 7, fontSize: 12.5, marginBottom: 12,
+      background: t === 'success' ? '#f0fdf4' : '#fef2f2',
+      color:      t === 'success' ? '#166534'  : '#991b1b',
+      border: `1px solid ${t === 'success' ? '#bbf7d0' : '#fecaca'}`,
     }),
-    toggleBtn: {
-      background: 'none', border: 'none', cursor: 'pointer',
-      padding: '6px 8px', borderRadius: 8, color: '#455a64',
-      fontSize: 18,
-    },
   };
 
-  /* ─── Render Functions ─── */
+  /* ───────── RENDER: DASHBOARD ───────── */
   const renderDashboard = () => (
     <>
-      {/* Stats */}
       <div style={S.statsGrid}>
         {[
-          { label: 'My Orders', value: stats.totalOrders, sub: 'Total orders placed', icon: '🛒', accent: '#00897b' },
-          { label: 'My Products', value: stats.totalProducts, sub: 'Products listed', icon: '📦', accent: '#26a69a' },
-          { label: 'Active Loan', value: `₹${stats.activeLoan}`, sub: 'Current loan amount', icon: '💰', accent: '#00695c' },
-          { label: 'Total Savings', value: `₹${stats.totalSavings}`, sub: 'Accumulated savings', icon: '💵', accent: '#004d40' },
+          { label: 'Orders Received', value: stats.totalOrders,   sub: 'From customers'   },
+          { label: 'My Products',     value: stats.totalProducts, sub: 'Listed in shop'   },
+          { label: 'Active Loan',     value: `₹${stats.activeLoan}`, sub: 'Approved amount' },
         ].map((s, i) => (
-          <div key={i} style={S.statCard(s.accent)}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          <div key={i} style={S.statCard(i)}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.07)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
           >
-            <div style={S.statIcon(s.accent)}>{s.icon}</div>
             <div style={S.statLabel}>{s.label}</div>
-            <div style={S.statNum(s.accent)}>{s.value}</div>
+            <div style={S.statNum}>{s.value}</div>
             <div style={S.statSub}>{s.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Recent Orders */}
+      {/* Recent incoming orders */}
       <div style={S.card}>
         <div style={S.cardHeader}>
-          🛒 Recent Orders
-          <button style={{ ...S.btnPrimary, padding: '7px 16px', fontSize: 12 }}
-            onClick={() => setActiveNav('myOrders')}>
-            View All
-          </button>
+          Recent Orders Received
+          <button style={S.btnOutline} onClick={() => setActiveNav('myOrders')}>View All</button>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={S.table}>
             <thead>
-              <tr>
-                {['Order ID', 'Product', 'Amount', 'Status', 'Date'].map(h => (
-                  <th key={h} style={S.th}>{h}</th>
-                ))}
-              </tr>
+              <tr>{['Order ID','Customer','Products','Amount','Status','Date'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
             </thead>
             <tbody>
-              {orders.slice(0, 5).map(order => (
+              {sellerOrders.slice(0, 5).map(order => (
                 <tr key={order._id}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f9fffe'}
+                  onMouseEnter={e => e.currentTarget.style.background = c.hover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <td style={{ ...S.td, fontWeight: 600 }}>#{order._id?.slice(-6)}</td>
-                  <td style={S.td}>{order.product_id?.name || 'N/A'}</td>
-                  <td style={S.td}>₹{order.total_amount}</td>
+                  <td style={{ ...S.td, fontWeight: 600, fontFamily: 'monospace', fontSize: 12 }}>#{order._id?.slice(-8).toUpperCase()}</td>
+                  <td style={S.td}>{order.customer_id?.name || '—'}</td>
+                  <td style={{ ...S.td, fontSize: 12 }}>{order.items?.map(i => i.product_id?.name).filter(Boolean).join(', ') || '—'}</td>
+                  <td style={{ ...S.td, fontWeight: 600 }}>₹{order.total_amount}</td>
                   <td style={S.td}><span style={S.badge(order.status)}>{order.status}</span></td>
-                  <td style={S.td}>{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td style={{ ...S.td, color: c.sub }}>{new Date(order.createdAt).toLocaleDateString('en-IN')}</td>
                 </tr>
               ))}
-              {orders.length === 0 && (
-                <tr><td colSpan="5" style={{ ...S.td, textAlign: 'center', color: '#78909c' }}>No orders yet</td></tr>
+              {sellerOrders.length === 0 && (
+                <tr><td colSpan="6" style={{ ...S.td, textAlign: 'center', color: c.sub }}>No orders received yet</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Recent Activities */}
+      {/* My Products snapshot */}
       <div style={S.card}>
-        <div style={S.cardHeader}>⚡ Recent Activities</div>
-        <div style={S.cardBody}>
-          {[
-            { icon: '🛒', title: 'Order Placed', desc: 'You placed an order for Handmade Papads', time: '2 hours ago', color: '#00897b' },
-            { icon: '📦', title: 'Product Listed', desc: 'Your product "Cotton Bags" is now live', time: '1 day ago', color: '#26a69a' },
-            { icon: '💰', title: 'Loan Approved', desc: 'Your loan of ₹5,000 has been approved', time: '3 days ago', color: '#00695c' },
-          ].map((a, i) => (
-            <div key={i} style={{
-              display: 'flex', gap: 14, padding: '13px 0',
-              borderBottom: i === 2 ? 'none' : '1px solid #e0f2f1',
-            }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 50,
-                background: a.color + '18',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 15, flexShrink: 0,
-              }}>{a.icon}</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: '#004d40' }}>{a.title}</div>
-                <div style={{ fontSize: 12, color: '#78909c', marginTop: 1 }}>{a.desc}</div>
-                <div style={{ fontSize: 11, color: '#bbb', marginTop: 2 }}>{a.time}</div>
-              </div>
-            </div>
-          ))}
+        <div style={S.cardHeader}>
+          My Products
+          <button style={S.btnOutline} onClick={() => setActiveNav('addProduct')}>Add Product</button>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={S.table}>
+            <thead>
+              <tr>{['#','Name','Category','Price','Stock'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {products.slice(0, 5).map((p, i) => (
+                <tr key={p._id}
+                  onMouseEnter={e => e.currentTarget.style.background = c.hover}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <td style={{ ...S.td, color: c.sub }}>{i + 1}</td>
+                  <td style={{ ...S.td, fontWeight: 600 }}>{p.name}</td>
+                  <td style={S.td}>{p.category}</td>
+                  <td style={S.td}>₹{p.price}</td>
+                  <td style={S.td}>{p.quantity ?? 'N/A'}</td>
+                </tr>
+              ))}
+              {products.length === 0 && (
+                <tr><td colSpan="5" style={{ ...S.td, textAlign: 'center', color: c.sub }}>No products listed yet</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </>
   );
 
+  /* ───────── RENDER: ORDERS RECEIVED ───────── */
   const renderMyOrders = () => (
     <div style={S.card}>
-      <div style={S.cardHeader}>🛒 All My Orders</div>
+      <div style={S.cardHeader}>
+        All Orders Received
+        <span style={{ fontSize: 12, color: c.sub, fontWeight: 400 }}>Orders placed by customers for your products</span>
+      </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={S.table}>
           <thead>
-            <tr>
-              {['#', 'Order ID', 'Product', 'Quantity', 'Amount', 'Status', 'Date'].map(h => (
-                <th key={h} style={S.th}>{h}</th>
-              ))}
-            </tr>
+            <tr>{['#','Order ID','Customer','Contact','Products Ordered','Amount','Status','Payment','Date'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
           </thead>
           <tbody>
-            {orders.map((order, i) => (
+            {sellerOrders.map((order, i) => (
               <tr key={order._id}
-                onMouseEnter={e => e.currentTarget.style.background = '#f9fffe'}
+                onMouseEnter={e => e.currentTarget.style.background = c.hover}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <td style={{ ...S.td, color: '#78909c' }}>{i + 1}</td>
-                <td style={{ ...S.td, fontWeight: 600 }}>#{order._id?.slice(-8)}</td>
-                <td style={S.td}>{order.product_id?.name || 'N/A'}</td>
-                <td style={S.td}>{order.quantity || 1}</td>
-                <td style={S.td}>₹{order.total_amount}</td>
+                <td style={{ ...S.td, color: c.sub }}>{i + 1}</td>
+                <td style={{ ...S.td, fontWeight: 600, fontFamily: 'monospace', fontSize: 12 }}>#{order._id?.slice(-8).toUpperCase()}</td>
+                <td style={{ ...S.td, fontWeight: 500 }}>{order.customer_id?.name || '—'}</td>
+                <td style={{ ...S.td, color: c.sub }}>{order.customer_id?.contact_no || order.customer_id?.email || '—'}</td>
+                <td style={{ ...S.td, fontSize: 12 }}>
+                  {order.items?.map((item, idx) => (
+                    <div key={idx}>{item.product_id?.name || 'Product'} × {item.quantity}</div>
+                  ))}
+                </td>
+                <td style={{ ...S.td, fontWeight: 600 }}>₹{order.total_amount}</td>
                 <td style={S.td}><span style={S.badge(order.status)}>{order.status}</span></td>
-                <td style={S.td}>{new Date(order.createdAt).toLocaleDateString()}</td>
+                <td style={S.td}><span style={S.badge(order.payment_status)}>{order.payment_status}</span></td>
+                <td style={{ ...S.td, color: c.sub }}>{new Date(order.createdAt).toLocaleDateString('en-IN')}</td>
               </tr>
             ))}
-            {orders.length === 0 && (
-              <tr><td colSpan="7" style={{ ...S.td, textAlign: 'center', color: '#78909c' }}>No orders found</td></tr>
+            {sellerOrders.length === 0 && (
+              <tr><td colSpan="9" style={{ ...S.td, textAlign: 'center', color: c.sub, padding: 40 }}>No orders received yet. Once customers buy your products, they will appear here.</td></tr>
             )}
           </tbody>
         </table>
@@ -506,15 +395,14 @@ const MemberDashboard = () => {
     </div>
   );
 
+  /* ───────── RENDER: ADD PRODUCT ───────── */
   const renderAddProduct = () => (
     <div style={{ maxWidth: 560 }}>
       <div style={S.card}>
-        <div style={S.cardHeader}>➕ Add New Product</div>
+        <div style={S.cardHeader}>Add New Product</div>
         <div style={S.cardBody}>
           {productMsg && (
-            <div style={{ ...S.alert(productMsg.split(':')[0]), marginBottom: 16 }}>
-              {productMsg.split(':')[1]}
-            </div>
+            <div style={S.alert(productMsg.split(':')[0])}>{productMsg.split(':').slice(1).join(':')}</div>
           )}
           <form onSubmit={submitProduct} style={S.form}>
             <div>
@@ -522,64 +410,77 @@ const MemberDashboard = () => {
               <input style={S.input} placeholder="e.g., Handmade Papads"
                 value={productName} onChange={e => setProductName(e.target.value)} required />
             </div>
-            <div style={S.formRow}>
+            <div style={S.formRow2}>
               <div>
                 <label style={S.label}>Price (₹)</label>
                 <input type="number" style={S.input} placeholder="150"
                   value={productPrice} onChange={e => setProductPrice(e.target.value)} required />
               </div>
               <div>
-                <label style={S.label}>Category</label>
-                <select style={S.select} value={productCategory} onChange={e => setProductCategory(e.target.value)} required>
-                  <option value="">Select Category</option>
-                  <option value="Food">Food</option>
-                  <option value="Crafts">Crafts</option>
-                  <option value="Textiles">Textiles</option>
-                  <option value="Beauty">Beauty</option>
-                  <option value="Home Decor">Home Decor</option>
-                </select>
+                <label style={S.label}>Quantity</label>
+                <input type="number" style={S.input} placeholder="10"
+                  value={productQty} onChange={e => setProductQty(e.target.value)} required />
               </div>
             </div>
             <div>
+              <label style={S.label}>Category</label>
+              <select style={S.select} value={productCategory} onChange={e => setProductCategory(e.target.value)} required>
+                <option value="">Select Category</option>
+                <option value="Food">Food</option>
+                <option value="Crafts">Crafts</option>
+                <option value="Textiles">Textiles</option>
+                <option value="Beauty">Beauty</option>
+                <option value="Home Decor">Home Decor</option>
+                <option value="Agriculture">Agriculture</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
               <label style={S.label}>Description</label>
-              <textarea style={S.textarea} placeholder="Describe your product..."
+              <textarea style={S.textarea} placeholder="Describe your product…"
                 value={productDesc} onChange={e => setProductDesc(e.target.value)} />
             </div>
-            <button type="submit" style={S.btnPrimary}>Add Product</button>
+            <div>
+              <button type="submit" style={S.btn}>Add Product</button>
+            </div>
           </form>
         </div>
       </div>
     </div>
   );
 
+  /* ───────── RENDER: MY PRODUCTS ───────── */
   const renderMyProducts = () => (
     <div style={S.card}>
-      <div style={S.cardHeader}>📦 My Products</div>
+      <div style={S.cardHeader}>
+        My Products
+        <button style={S.btn} onClick={() => setActiveNav('addProduct')}>+ Add Product</button>
+      </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={S.table}>
           <thead>
-            <tr>
-              {['#', 'Product Name', 'Category', 'Price', 'Stock', 'Status'].map(h => (
-                <th key={h} style={S.th}>{h}</th>
-              ))}
-            </tr>
+            <tr>{['#','Product Name','Category','Price (₹)','Stock','Description'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {products.map((product, i) => (
               <tr key={product._id}
-                onMouseEnter={e => e.currentTarget.style.background = '#f9fffe'}
+                onMouseEnter={e => e.currentTarget.style.background = c.hover}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <td style={{ ...S.td, color: '#78909c' }}>{i + 1}</td>
+                <td style={{ ...S.td, color: c.sub }}>{i + 1}</td>
                 <td style={{ ...S.td, fontWeight: 600 }}>{product.name}</td>
                 <td style={S.td}>{product.category}</td>
                 <td style={S.td}>₹{product.price}</td>
-                <td style={S.td}>{product.stock_quantity || 'N/A'}</td>
-                <td style={S.td}><span style={S.badge('Approved')}>Active</span></td>
+                <td style={S.td}>{product.quantity ?? '—'}</td>
+                <td style={{ ...S.td, color: c.sub, fontSize: 12 }}>{product.description || '—'}</td>
               </tr>
             ))}
             {products.length === 0 && (
-              <tr><td colSpan="6" style={{ ...S.td, textAlign: 'center', color: '#78909c' }}>No products listed yet</td></tr>
+              <tr><td colSpan="6" style={{ ...S.td, textAlign: 'center', color: c.sub, padding: 40 }}>
+                No products listed yet.{' '}
+                <span style={{ color: c.text, cursor: 'pointer', textDecoration: 'underline' }}
+                  onClick={() => setActiveNav('addProduct')}>Add your first product</span>
+              </td></tr>
             )}
           </tbody>
         </table>
@@ -587,16 +488,15 @@ const MemberDashboard = () => {
     </div>
   );
 
+  /* ───────── RENDER: LOANS ───────── */
   const renderLoans = () => (
     <>
       <div style={{ maxWidth: 560, marginBottom: 20 }}>
         <div style={S.card}>
-          <div style={S.cardHeader}>💰 Apply for Loan</div>
+          <div style={S.cardHeader}>Apply for Loan</div>
           <div style={S.cardBody}>
             {loanMsg && (
-              <div style={{ ...S.alert(loanMsg.split(':')[0]), marginBottom: 16 }}>
-                {loanMsg.split(':')[1]}
-              </div>
+              <div style={S.alert(loanMsg.split(':')[0])}>{loanMsg.split(':').slice(1).join(':')}</div>
             )}
             <form onSubmit={submitLoan} style={S.form}>
               <div>
@@ -606,34 +506,31 @@ const MemberDashboard = () => {
               </div>
               <div>
                 <label style={S.label}>Reason</label>
-                <textarea style={S.textarea} placeholder="Purpose of loan..."
+                <textarea style={S.textarea} placeholder="Purpose of loan…"
                   value={loanReason} onChange={e => setLoanReason(e.target.value)} required />
               </div>
-              <button type="submit" style={S.btnPrimary}>Submit Application</button>
+              <div>
+                <button type="submit" style={S.btn}>Submit Application</button>
+              </div>
             </form>
           </div>
         </div>
       </div>
 
       <div style={S.card}>
-        <div style={S.cardHeader}>💰 My Loan History</div>
+        <div style={S.cardHeader}>Loan History</div>
         <div style={{ overflowX: 'auto' }}>
           <table style={S.table}>
             <thead>
-              <tr>
-                {['Date', 'Bachatgat', 'Requested', 'Approved', 'Paid', 'Status'].map(h => (
-                  <th key={h} style={S.th}>{h}</th>
-                ))}
-              </tr>
+              <tr>{['Date','Requested (₹)','Approved (₹)','Paid (₹)','Status'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {loans.map(loan => (
                 <tr key={loan._id}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f9fffe'}
+                  onMouseEnter={e => e.currentTarget.style.background = c.hover}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <td style={S.td}>{new Date(loan.createdAt).toLocaleDateString()}</td>
-                  <td style={S.td}>{loan.bachatgat_id?.name || 'N/A'}</td>
+                  <td style={{ ...S.td, color: c.sub }}>{new Date(loan.createdAt).toLocaleDateString('en-IN')}</td>
                   <td style={S.td}>₹{loan.loan_amount_required}</td>
                   <td style={S.td}>₹{loan.approved_amount || 0}</td>
                   <td style={S.td}>₹{loan.total_paid || 0}</td>
@@ -641,7 +538,7 @@ const MemberDashboard = () => {
                 </tr>
               ))}
               {loans.length === 0 && (
-                <tr><td colSpan="6" style={{ ...S.td, textAlign: 'center', color: '#78909c' }}>No loan history</td></tr>
+                <tr><td colSpan="5" style={{ ...S.td, textAlign: 'center', color: c.sub }}>No loan history</td></tr>
               )}
             </tbody>
           </table>
@@ -650,118 +547,71 @@ const MemberDashboard = () => {
     </>
   );
 
-  const renderMembers = () => (
-    <div style={S.card}>
-      <div style={S.cardHeader}>👥 All Members</div>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={S.table}>
-          <thead>
-            <tr>
-              {['#', 'Name', 'Contact', 'Address', 'Role', 'Status'].map(h => (
-                <th key={h} style={S.th}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((member, i) => (
-              <tr key={member._id}
-                onMouseEnter={e => e.currentTarget.style.background = '#f9fffe'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <td style={{ ...S.td, color: '#78909c' }}>{i + 1}</td>
-                <td style={{ ...S.td, fontWeight: 600 }}>{member.name}</td>
-                <td style={S.td}>{member.contact_no || 'N/A'}</td>
-                <td style={S.td}>{member.address || 'N/A'}</td>
-                <td style={S.td}>{member.role}</td>
-                <td style={S.td}><span style={S.badge('Approved')}>Active</span></td>
-              </tr>
-            ))}
-            {members.length === 0 && (
-              <tr><td colSpan="6" style={{ ...S.td, textAlign: 'center', color: '#78909c' }}>No members found</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
-  const PAGE_TITLES = {
-    dashboard: { title: 'Member Dashboard', sub: 'Welcome back! Here\'s your activity overview.' },
-    myOrders: { title: 'My Orders', sub: 'View all your order history and track status.' },
-    addProduct: { title: 'Add Product', sub: 'List a new product for sale in the marketplace.' },
-    myProducts: { title: 'My Products', sub: 'Manage all your listed products.' },
-    loans: { title: 'Loans', sub: 'Apply for loans and view your loan history.' },
-    savings: { title: 'Savings', sub: 'Track your savings and contributions.' },
-    members: { title: 'All Members', sub: 'View all members in your Bachatgat group.' },
+  /* ───────── Page meta ───────── */
+  const PAGE_META = {
+    dashboard:  { title: 'Dashboard',          sub: 'Overview of your activity and incoming orders.' },
+    myOrders:   { title: 'Orders Received',    sub: 'Orders placed by customers for your products.' },
+    addProduct: { title: 'Add Product',        sub: 'List a new product in the marketplace.' },
+    myProducts: { title: 'My Products',        sub: 'Manage all your listed products.' },
+    loans:      { title: 'My Loans',           sub: 'Apply for a loan and view your loan history.' },
   };
+  const current = PAGE_META[activeNav] || PAGE_META.dashboard;
 
-  const current = PAGE_TITLES[activeNav] || PAGE_TITLES.dashboard;
-
+  /* ───────── MAIN RENDER ───────── */
   return (
     <div style={S.shell}>
-      {/* ─── SIDEBAR ─── */}
+
+      {/* SIDEBAR */}
       <aside style={S.sidebar}>
-        <div style={S.logo}>
-          <div style={S.logoIcon}>M</div>
-          {sidebarOpen && <span style={S.logoText}>Member</span>}
+        <div style={S.sideHeader}>
+          {sidebarOpen && <span style={S.brandText}>Krantijyoti Mahila Gat</span>}
         </div>
 
         <nav style={S.navSection}>
           {NAV_ITEMS.map(item => (
-            <div key={item.key}
+            <button key={item.key}
               style={S.navItem(activeNav === item.key)}
-              onClick={() => setActiveNav(item.key)}
-              title={!sidebarOpen ? item.label : ''}
+              onClick={() => { setActiveNav(item.key); }}
             >
-              <span style={S.navIcon}>{item.icon}</span>
-              <span style={S.navLabel}>{item.label}</span>
-            </div>
+              {item.label}
+            </button>
           ))}
         </nav>
 
-        <div style={S.navBottom}>
-          <div style={{ ...S.navItem(false), marginBottom: 4 }}>
-            <span style={S.navIcon}>⚙️</span>
-            <span style={S.navLabel}>Settings</span>
-          </div>
-          <div style={{ ...S.navItem(false), color: '#c62828' }} onClick={handleLogout}>
-            <span style={S.navIcon}>🚪</span>
-            <span style={S.navLabel}>Logout</span>
-          </div>
+        <div style={S.navFooter}>
+          <button style={S.navItem(false)} onClick={() => {}}>Settings</button>
+          <button style={{ ...S.navItem(false), color: '#dc2626' }} onClick={handleLogout}>Logout</button>
         </div>
       </aside>
 
-      {/* ─── MAIN ─── */}
+      {/* MAIN */}
       <div style={S.main}>
         <header style={S.topbar}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button style={S.toggleBtn} onClick={() => setSidebarOpen(o => !o)}>
-              {sidebarOpen ? '◀' : '▶'}
+          <div style={S.topLeft}>
+            <button style={S.collapseBtn} onClick={() => setSidebarOpen(o => !o)}>
+              {sidebarOpen ? '‹' : '›'}
             </button>
             <div style={S.searchBar}>
-              <span style={{ fontSize: 14, color: '#78909c' }}>🔍</span>
-              <input style={S.searchInput} placeholder="Search..." />
+              <input style={S.searchInput} placeholder="Search products, orders…" />
             </div>
           </div>
-
           <div style={S.topRight}>
-            <button style={S.bellBtn}>🔔</button>
-            <div style={S.avatar} title={userInfo?.name}>
+            {sidebarOpen && <span style={{ fontSize: 13, fontWeight: 500, color: c.text }}>{userInfo?.name}</span>}
+            <button style={S.avatarCircle} title={userInfo?.name}>
               {(userInfo?.name || 'M').charAt(0).toUpperCase()}
-            </div>
+            </button>
           </div>
         </header>
 
         <div style={S.content}>
-          <div style={S.pageTitle}>{current.title}</div>
-          <div style={S.pageSub}>{current.sub}</div>
+          <div style={S.pageHeading}>{current.title}</div>
+          <div style={S.pageCrumb}>{current.sub}</div>
 
-          {activeNav === 'dashboard' && renderDashboard()}
-          {activeNav === 'myOrders' && renderMyOrders()}
+          {activeNav === 'dashboard'  && renderDashboard()}
+          {activeNav === 'myOrders'   && renderMyOrders()}
           {activeNav === 'addProduct' && renderAddProduct()}
           {activeNav === 'myProducts' && renderMyProducts()}
-          {activeNav === 'loans' && renderLoans()}
-          {activeNav === 'members' && renderMembers()}
+          {activeNav === 'loans'      && renderLoans()}
         </div>
       </div>
     </div>

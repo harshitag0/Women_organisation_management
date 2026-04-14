@@ -98,7 +98,14 @@ const createProduct = async (req, res) => {
 // @access  Private/Bachatgat, Member
 const getMyProducts = async (req, res) => {
   try {
-    const bachatgat_id = req.user.role === 'Member' ? req.user.bachatgat_id : req.user._id;
+    // Mirror the same fallback used in createProduct:
+    // if member has no bachatgat_id, products were saved with their own _id
+    let bachatgat_id;
+    if (req.user.role === 'Member') {
+      bachatgat_id = req.user.bachatgat_id || req.user._id;
+    } else {
+      bachatgat_id = req.user._id;
+    }
     const products = await Product.find({ bachatgat_id }).populate('bachatgat_id', 'name');
     res.json(products);
   } catch (error) {

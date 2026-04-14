@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addOrderItems, getMyOrders, getOrders, updateOrderStatus } = require('../controllers/orderController');
+const { addOrderItems, getMyOrders, getOrders, updateOrderStatus, getSellerOrders } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 
 router.route('/')
@@ -8,6 +8,8 @@ router.route('/')
   .get(protect, authorize('Admin'), getOrders);
 
 router.route('/myorders').get(protect, authorize('Customer', 'Member'), getMyOrders);
+
+router.route('/seller-orders').get(protect, authorize('Member', 'Bachatgat'), getSellerOrders);
 
 router.route('/:id/status').put(protect, authorize('Admin', 'Bachatgat'), updateOrderStatus);
 

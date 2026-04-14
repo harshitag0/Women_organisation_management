@@ -162,10 +162,10 @@ const Login = () => {
 
         {/* brand header */}
         <div style={s.brandRow}>
-          <div style={s.logoMark}>SC</div>
+          <div style={s.logoMark}>KM</div>
           <div>
-            <div style={s.brandName}>SakhiConnect</div>
-            <div style={s.brandTagline}>Empowering Women · Building Communities</div>
+            <div style={s.brandName}>Krantijyoti Mahila Gat</div>
+            <div style={s.brandTagline}>Empowering Women · Nagpur, Maharashtra</div>
           </div>
         </div>
 
@@ -226,7 +226,7 @@ const Login = () => {
           <form onSubmit={registerHandler} style={s.form}>
             <div style={s.formHeader}>
               <h2 style={s.formTitle}>Create Account</h2>
-              <p style={s.formSub}>Join SakhiConnect — it's free</p>
+              <p style={s.formSub}>Join Krantijyoti Mahila Gat — it's free</p>
             </div>
 
             {regErr && <div style={s.errBox}>{regErr}</div>}

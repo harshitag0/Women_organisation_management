@@ -39,8 +39,11 @@ const userSchema = new mongoose.Schema({
   ifsc_code: { type: String },
   // Specific to Member
   bachatgat_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  aadhar_no: { type: String },
-  dob: { type: Date }
+  aadhar_no:   { type: String },
+  dob:         { type: Date },
+  age:         { type: Number },
+  group_role:  { type: String, enum: ['President', 'Secretary', 'Treasurer', 'Member'], default: 'Member' },
+  savings:     { type: Number, default: 0 },
 }, { timestamps: true });
 
 // Password hashing middleware

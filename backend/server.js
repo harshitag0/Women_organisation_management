@@ -22,15 +22,18 @@ const loanRoutes = require('./routes/loanRoutes');
 const miscRoutes = require('./routes/miscRoutes');
 const memberRoutes = require('./routes/memberRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // Listen to routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/loans', loanRoutes);
-app.use('/api', miscRoutes); // Mounts /api/events and /api/savings
 app.use('/api/members', memberRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/payment', paymentRoutes);
+// Mount miscRoutes LAST so /api/members, /api/orders etc. are not swallowed
+app.use('/api', miscRoutes); // Handles /api/events, /api/savings, /api/stats, /api/feedback
 
 // Basic Route
 app.get('/', (req, res) => {

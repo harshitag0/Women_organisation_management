@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -69,9 +70,33 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// @desc    Get orders received for the logged-in member's products
+// @route   GET /api/orders/seller-orders
+// @access  Private/Member
+const getSellerOrders = async (req, res) => {
+  try {
+    // Find all products belonging to this member
+    const bachatgat_id = req.user.role === 'Member' ? req.user.bachatgat_id : req.user._id;
+    const myProductIds = await Product.find({ bachatgat_id }).distinct('_id');
+
+    // Find orders that contain at least one of those products
+    const orders = await Order.find({
+      'items.product_id': { $in: myProductIds }
+    })
+      .populate('customer_id', 'name email contact_no')
+      .populate('items.product_id', 'name price')
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addOrderItems,
   getMyOrders,
   getOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  getSellerOrders
 };
