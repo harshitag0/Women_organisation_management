@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://women-organisation-management.onrender.com',
         changeOrigin: true,
       },
     },
@@ -15,7 +15,7 @@ export default defineConfig({
   preview: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://women-organisation-management.onrender.com',
         changeOrigin: true,
       },
     },
