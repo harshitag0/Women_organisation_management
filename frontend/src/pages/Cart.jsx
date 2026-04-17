@@ -73,7 +73,7 @@ const Cart = () => {
         key: data.key,
         amount: data.amount,
         currency: data.currency,
-        name: 'Krantijyoti Mahila Gat',
+        name: 'SakhiConnect',
         description: 'Handmade Products Marketplace',
         order_id: data.order_id,
         handler: async (response) => {

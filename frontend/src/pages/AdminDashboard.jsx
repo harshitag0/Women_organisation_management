@@ -604,7 +604,7 @@ const AdminDashboard = () => {
   );
 
   const PAGE = {
-    dashboard:     { title: 'Dashboard',       sub: 'Overview of Krantijyoti Mahila Gat.' },
+    dashboard:     { title: 'Dashboard',       sub: 'Overview of SakhiConnect.' },
     members:       { title: 'Members',         sub: membersLoading ? 'Loading members…' : `All ${members.length} registered member${members.length !== 1 ? 's' : ''}.` },
     addMember:     { title: 'Add Member',      sub: 'Register a new member to the group.' },
     announcements: { title: 'Announcements',   sub: 'Publish updates to the community.' },
@@ -637,7 +637,7 @@ const AdminDashboard = () => {
             <div style={S.logoMark}>K</div>
             {sidebarOpen && (
               <div>
-                <div style={S.logoText}>Krantijyoti Mahila Gat</div>
+                <div style={S.logoText}>SakhiConnect</div>
                 <div style={S.logoSub}>Admin Dashboard</div>
               </div>
             )}

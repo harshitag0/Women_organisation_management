@@ -39,9 +39,9 @@ const Contact = () => {
           {/* Info cards */}
           <div style={s.infoCol}>
             {[
-              { icon: <i className="fas fa-map-marker-alt" />, title: 'Our Address', lines: ['Krantijyoti Mahila Gat', 'Nagpur, Maharashtra, India'] },
+              { icon: <i className="fas fa-map-marker-alt" />, title: 'Our Address', lines: ['SakhiConnect', 'Nagpur, Maharashtra, India'] },
               { icon: <i className="fas fa-phone-alt" />, title: 'Phone', lines: ['+91 XXXXX XXXXX', 'Mon–Sat, 9am–6pm'] },
-              { icon: <i className="fas fa-envelope" />, title: 'Email', lines: ['krantijyoti.nagpur@gmail.com'] },
+              { icon: <i className="fas fa-envelope" />, title: 'Email', lines: ['sakhiconnect.nagpur@gmail.com'] },
             ].map((c, i) => (
               <div key={i} style={s.infoCard}>
                 <div style={s.infoIcon}>{c.icon}</div>

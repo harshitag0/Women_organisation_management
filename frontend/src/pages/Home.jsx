@@ -111,14 +111,14 @@ const Home = () => {
             {/* LEFT: TEXT */}
             <Col lg={6} className="py-5 hero-content">
               <div className="hero-tag" style={{ animation: 'fadeSlideUp .6s ease forwards' }}>
-                🌸 Krantijyoti Mahila Gat — Nagpur
+                🌸 SakhiConnect — Nagpur
               </div>
               <h1 className="hero-title" style={{ animation: 'fadeSlideUp .7s .1s ease both' }}>
                 Together We <span className="highlight">Rise,</span><br />
                 Together We <span className="highlight">Thrive</span>
               </h1>
               <p className="hero-sub" style={{ animation: 'fadeSlideUp .7s .2s ease both' }}>
-                A digital platform for Krantijyoti Mahila Gat — manage savings, apply for microloans, and sell handcrafted products directly to customers across Maharashtra.
+                A digital platform for SakhiConnect — manage savings, apply for microloans, and sell handcrafted products directly to customers across Maharashtra.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, animation: 'fadeSlideUp .7s .3s ease both' }}>
                 <button className="btn-primary-cta" onClick={() => navigate('/login')}>
@@ -197,7 +197,7 @@ const Home = () => {
                 }}>
                   <span style={{ fontSize: '1.5rem' }}>🌟</span>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--text-dark)' }}>Krantijyoti Mahila Gat</div>
+                    <div style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--text-dark)' }}>SakhiConnect</div>
                     <div style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>
                       {loading ? 'Loading...' : `${stats.totalMembers} members · ${stats.totalProducts} products`}
                     </div>
@@ -214,7 +214,7 @@ const Home = () => {
       <section style={{ padding: '60px 0', background: '#fff' }}>
         <Container>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--text-dark)', marginBottom: 12 }}>Why Join Krantijyoti Mahila Gat?</h2>
+            <h2 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--text-dark)', marginBottom: 12 }}>Why Join SakhiConnect?</h2>
             <p style={{ fontSize: '1rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>Empower your community with transparent savings, affordable loans, and a handmade marketplace.</p>
           </div>
           <Row className="g-4">
@@ -258,7 +258,7 @@ const Home = () => {
               <div className="section-label">📢 Important Updates</div>
               <h2 className="section-title">Community Announcements</h2>
               <p style={{ fontSize: '.95rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '12px auto 0' }}>
-                Stay informed with the latest news from Krantijyoti Mahila Gat
+                Stay informed with the latest news from SakhiConnect
               </p>
             </div>
             <Row className="g-4">
@@ -379,7 +379,7 @@ const Home = () => {
 
       {/* ══════ FOOTER STRIP ══════ */}
       <div className="footer-strip">
-        Made with ❤️ for <span>Krantijyoti Mahila Gat</span> · Empowering Women of Nagpur
+        Made with ❤️ for <span>SakhiConnect</span> · Empowering Women of Nagpur
       </div>
 
       {/* Keyframes */}

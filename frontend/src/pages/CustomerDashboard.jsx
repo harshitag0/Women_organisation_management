@@ -662,7 +662,7 @@ const CustomerDashboard = () => {
       {/* ── SIDEBAR ── */}
       <aside style={S.sidebar}>
         <div style={S.sideHeader}>
-          {sidebarOpen && <span style={S.brandText}>Krantijyoti Mahila Gat</span>}
+          {sidebarOpen && <span style={S.brandText}>SakhiConnect</span>}
         </div>
 
         <nav style={S.navSection}>

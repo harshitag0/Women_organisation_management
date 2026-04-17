@@ -24,7 +24,7 @@ const Header = () => {
       <Navbar className="navbar-bachatgat" expand="lg" collapseOnSelect>
         <Container>
           <LinkContainer to="/">
-            <Navbar.Brand>Krantijyoti Mahila Gat</Navbar.Brand>
+            <Navbar.Brand>SakhiConnect</Navbar.Brand>
           </LinkContainer>
 
           <form onSubmit={handleSearch} className="d-none d-md-flex mx-auto">
