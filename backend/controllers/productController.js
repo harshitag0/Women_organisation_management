@@ -5,9 +5,15 @@ const Product = require('../models/Product');
 // @access  Public
 const getProducts = async (req, res) => {
   try {
+    console.log('📦 Fetching all products...');
     const products = await Product.find({}).populate('bachatgat_id', 'name president_name');
+    console.log(`✅ Found ${products.length} products`);
+    if (products.length > 0) {
+      console.log('Sample product:', JSON.stringify(products[0], null, 2));
+    }
     res.json(products);
   } catch (error) {
+    console.error('❌ Error fetching products:', error.message);
     res.status(500).json({ message: error.message });
   }
 };

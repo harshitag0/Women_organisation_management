@@ -53,17 +53,30 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('=== HOME PAGE - FETCHING DATA ===');
+        console.log('axios.defaults.baseURL:', axios.defaults.baseURL);
+        console.log('Environment:', import.meta.env.MODE);
+        console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+        
         const [prodRes, eventRes, announcementRes, statsRes] = await Promise.all([
           axios.get('/api/products'),
           axios.get('/api/events'),
           axios.get('/api/announcements'),
           axios.get('/api/stats'),
         ]);
+        
+        console.log('✅ Products:', prodRes.data.length);
+        console.log('✅ Events:', eventRes.data.length);
+        console.log('✅ Announcements:', announcementRes.data.length);
+        console.log('✅ Stats:', statsRes.data);
+        
         setProducts(prodRes.data.slice(0, 4));
         setEvents(eventRes.data);
         setAnnouncements(announcementRes.data);
         setStats(statsRes.data);
-      } catch {
+      } catch (err) {
+        console.error('❌ Error fetching home data:', err.message);
+        console.error('Error details:', err.response?.data);
         // leave empty — show empty states
       } finally {
         setLoading(false);

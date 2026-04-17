@@ -16,10 +16,23 @@ const Shop = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.log('=== SHOP PAGE - FETCHING PRODUCTS ===');
+        console.log('axios.defaults.baseURL:', axios.defaults.baseURL);
+        console.log('Full URL:', axios.defaults.baseURL + '/api/products');
+        console.log('Environment:', import.meta.env.MODE);
+        console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+        
         const { data } = await axios.get('/api/products');
+        console.log('✅ Products fetched successfully:', data.length, 'products');
+        console.log('Sample product:', data[0]);
         setProducts(data);
         setLoading(false);
       } catch (err) {
+        console.error('❌ Error fetching products:', err.message);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        console.error('Request URL:', err.config?.url);
+        console.error('Base URL:', err.config?.baseURL);
         setLoading(false);
       }
     };

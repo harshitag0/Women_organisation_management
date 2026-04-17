@@ -6,9 +6,15 @@ const bcrypt = require('bcryptjs');
 // @access  Private/Admin, Bachatgat
 const getMembers = async (req, res) => {
   try {
+    console.log('👥 Fetching all members...');
     const members = await User.find({ role: 'Member' }).select('-password').sort({ group_role: 1, name: 1 });
+    console.log(`✅ Found ${members.length} members`);
+    if (members.length > 0) {
+      console.log('Sample member:', JSON.stringify(members[0], null, 2));
+    }
     res.json(members);
   } catch (error) {
+    console.error('❌ Error fetching members:', error.message);
     res.status(500).json({ message: error.message });
   }
 };
