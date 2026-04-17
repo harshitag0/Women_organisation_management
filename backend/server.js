@@ -18,7 +18,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  'https://krantijyotifoundation.vercel.app',
+  'https://sharda-foundation.vercel.app',        // Production Vercel frontend
+  'https://krantijyotifoundation.vercel.app',     // Legacy / old Vercel deployment
 ];
 
 const corsOptions = {
