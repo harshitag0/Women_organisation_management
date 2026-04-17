@@ -12,14 +12,28 @@ connectDB();
 const app = express();
 
 // CORS configuration
+// NOTE: The cors package does NOT support glob patterns like 'https://*.vercel.app'
+// We use a function to dynamically allow localhost, our Vercel app, and any Vercel preview URL
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'https://krantijyotifoundation.vercel.app',
+];
+
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'https://krantijyotifoundation.vercel.app',
-    'https://*.vercel.app' // Allow all Vercel preview deployments
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow exact matches
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    // Allow any *.vercel.app preview deployment
+    if (/^https:\/\/[a-zA-Z0-9-]+-[a-zA-Z0-9-]+\.vercel\.app$/.test(origin) ||
+        /^https:\/\/.+\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: Origin '${origin}' not allowed`));
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -63,5 +77,5 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`CORS enabled for: ${corsOptions.origin.join(', ')}`);
+  console.log(`CORS enabled for: ${ALLOWED_ORIGINS.join(', ')} + *.vercel.app`);
 });

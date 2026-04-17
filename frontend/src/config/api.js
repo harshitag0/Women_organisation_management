@@ -12,14 +12,17 @@ const api = axios.create({
 });
 
 // Add request interceptor to include auth token
+// AuthContext stores userInfo in sessionStorage — read from there
 api.interceptors.request.use(
   (config) => {
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo = sessionStorage.getItem('userInfo') || localStorage.getItem('userInfo');
     if (userInfo) {
-      const { token } = JSON.parse(userInfo);
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      try {
+        const { token } = JSON.parse(userInfo);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (e) { /* ignore malformed data */ }
     }
     return config;
   },
