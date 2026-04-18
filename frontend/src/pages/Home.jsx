@@ -53,30 +53,17 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('=== HOME PAGE - FETCHING DATA ===');
-        console.log('axios.defaults.baseURL:', axios.defaults.baseURL);
-        console.log('Environment:', import.meta.env.MODE);
-        console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
-        
         const [prodRes, eventRes, announcementRes, statsRes] = await Promise.all([
           axios.get('/api/products'),
           axios.get('/api/events'),
           axios.get('/api/announcements'),
           axios.get('/api/stats'),
         ]);
-        
-        console.log('✅ Products:', prodRes.data.length);
-        console.log('✅ Events:', eventRes.data.length);
-        console.log('✅ Announcements:', announcementRes.data.length);
-        console.log('✅ Stats:', statsRes.data);
-        
         setProducts(prodRes.data.slice(0, 4));
         setEvents(eventRes.data);
         setAnnouncements(announcementRes.data);
         setStats(statsRes.data);
       } catch (err) {
-        console.error('❌ Error fetching home data:', err.message);
-        console.error('Error details:', err.response?.data);
         // leave empty — show empty states
       } finally {
         setLoading(false);
@@ -210,7 +197,6 @@ const Home = () => {
         </Container>
       </section>
 
-      {/* ══════ WHY JOIN ══════ */}
       <section style={{ padding: '60px 0', background: '#fff' }}>
         <Container>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -219,27 +205,41 @@ const Home = () => {
           </div>
           <Row className="g-4">
             {[
-              { icon: '💰', title: 'Group Savings', desc: 'Track deposits & withdrawals for every member with transparent ledgers.', bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6' },
-              { icon: '🤝', title: 'Micro Loans',   desc: 'Apply for affordable loans within your group. Quick, simple approvals.',  bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6' },
-              { icon: '🛒', title: 'Sell Online',   desc: 'List handmade products and reach customers across Maharashtra.',            bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6' },
-              { icon: '📊', title: 'Track Progress',desc: 'Role-based dashboards for Admin, Bachatgat, Members & Customers.',          bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6' },
+              {
+                svg: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d946a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+                title: 'Group Savings', desc: 'Track deposits & withdrawals for every member with transparent ledgers.', bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6'
+              },
+              {
+                svg: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d946a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                title: 'Micro Loans', desc: 'Apply for affordable loans within your group. Quick, simple approvals.', bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6'
+              },
+              {
+                svg: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d946a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
+                title: 'Sell Online', desc: 'List handmade products and reach customers across Maharashtra.', bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6'
+              },
+              {
+                svg: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d946a6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+                title: 'Track Progress', desc: 'Role-based dashboards for Admin, Bachatgat, Members & Customers.', bgColor: '#fce4ec', borderColor: '#f39ab0', accentColor: '#d946a6'
+              },
             ].map((f, i) => (
               <Col key={i} xs={12} sm={6} lg={3}>
                 <div style={{
                   background: f.bgColor, borderRadius: '12px', padding: '32px 24px',
                   border: `2px solid ${f.borderColor}`, height: '100%',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  animation: `fadeSlideUp .6s ${i * 0.1}s ease both`,
+                  animation: `fadeSlideUp .6s ${i * 0.12}s ease both`,
                   cursor: 'pointer', display: 'flex', flexDirection: 'column',
                   position: 'relative', overflow: 'hidden'
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.borderColor = f.accentColor; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = f.borderColor; }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.borderColor = f.accentColor; e.currentTarget.style.boxShadow = '0 16px 40px rgba(194,24,91,0.15)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = f.borderColor; e.currentTarget.style.boxShadow = 'none'; }}
                   className="feature-card"
                 >
-                  <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', borderRadius: '50%', background: f.borderColor, opacity: 0.1 }} />
+                  <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', borderRadius: '50%', background: f.borderColor, opacity: 0.15 }} />
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3.5rem', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', background: 'rgba(255,255,255,0.6)', borderRadius: '12px' }} className="feature-icon">{f.icon}</div>
+                    <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '72px', height: '72px', background: 'rgba(255,255,255,0.7)', borderRadius: '16px', boxShadow: '0 4px 12px rgba(194,24,91,0.12)', transition: 'transform .3s' }} className="feature-icon">
+                      {f.svg}
+                    </div>
                     <div style={{ fontWeight: '700', fontSize: '1.1rem', color: f.accentColor, marginBottom: 10 }} className="feature-title">{f.title}</div>
                     <div style={{ fontSize: '.9rem', color: 'var(--text-muted)', lineHeight: '1.6', flex: 1 }} className="feature-desc">{f.desc}</div>
                   </div>
@@ -249,6 +249,7 @@ const Home = () => {
           </Row>
         </Container>
       </section>
+
 
       {/* ══════ ANNOUNCEMENTS (dynamic — only shown if any exist) ══════ */}
       {announcements.length > 0 && (

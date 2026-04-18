@@ -3,6 +3,7 @@ const Saving = require('../models/Saving');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Announcement = require('../models/Announcement');
+const Feedback = require('../models/Feedback');
 
 // @desc    Create a new event
 // @route   POST /api/events
@@ -125,10 +126,28 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+// @desc    Submit contact form / feedback
+// @route   POST /api/feedback
+// @access  Public
+const submitFeedback = async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ message: 'Name, email and message are required.' });
+    }
+    const feedback = await Feedback.create({ name, email, message });
+    res.status(201).json({ message: 'Feedback submitted successfully.', feedback });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createEvent,
   getEvents,
   addSaving,
   getSavings,
   getDashboardStats,
+  submitFeedback,
 };
+

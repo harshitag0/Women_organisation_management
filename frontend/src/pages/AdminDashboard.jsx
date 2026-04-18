@@ -53,7 +53,6 @@ const NAV_ITEMS = [
   { key: 'members',       icon: 'members',     label: 'Members'        },
   { key: 'addMember',     icon: 'addMember',   label: 'Add Member'     },
   { key: 'announcements', icon: 'announce',    label: 'Announcements'  },
-  { key: 'statistics',    icon: 'stats',       label: 'Statistics'     },
   { key: 'events',        icon: 'events',      label: 'Post Events'    },
 ];
 
@@ -634,7 +633,6 @@ const AdminDashboard = () => {
         {/* SIDEBAR */}
         <aside style={S.sidebar}>
           <div style={S.logo}>
-            <div style={S.logoMark}>K</div>
             {sidebarOpen && (
               <div>
                 <div style={S.logoText}>SakhiConnect</div>
@@ -689,7 +687,6 @@ const AdminDashboard = () => {
             {activeNav === 'members'       && renderMembers()}
             {activeNav === 'addMember'     && renderAddMember()}
             {activeNav === 'announcements' && renderAnnouncements()}
-            {activeNav === 'statistics'    && renderStatistics()}
             {activeNav === 'events'        && renderEvents()}
           </div>
         </div>

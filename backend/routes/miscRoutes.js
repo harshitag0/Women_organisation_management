@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createEvent, getEvents, addSaving, getSavings, getDashboardStats } = require('../controllers/miscController');
+const { createEvent, getEvents, addSaving, getSavings, getDashboardStats, submitFeedback } = require('../controllers/miscController');
 const { protect, authorize } = require('../middleware/auth');
 
 router.route('/events')
@@ -14,5 +14,9 @@ router.route('/savings')
 // Public stats for dashboard
 router.get('/stats', getDashboardStats);
 
+// Public contact form
+router.post('/feedback', submitFeedback);
+
 module.exports = router;
+
 

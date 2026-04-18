@@ -69,7 +69,6 @@ const Login = () => {
 
   /* register state */
   const [regName, setRegName] = useState('');
-  const [regUser, setRegUser] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPass, setRegPass] = useState('');
@@ -80,12 +79,7 @@ const Login = () => {
   const [regLoad, setRegLoad] = useState(false);
 
   /* role-specific fields */
-  const [regAdminDept, setRegAdminDept] = useState('');
-  const [regAdminId, setRegAdminId] = useState('');
   const [regMemberGroup, setRegMemberGroup] = useState('');
-  const [regMemberAddr, setRegMemberAddr] = useState('');
-  const [regCustAddr, setRegCustAddr] = useState('');
-  const [regCustCity, setRegCustCity] = useState('');
 
   useEffect(() => {
     if (!userInfo) return;
@@ -108,27 +102,23 @@ const Login = () => {
     e.preventDefault();
     setRegLoad(true); setRegErr(''); setRegOk('');
     try {
+      const autoUsername = regName.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now().toString().slice(-4);
       const payload = {
-        name: regName, username: regUser, email: regEmail,
+        name: regName, username: autoUsername, email: regEmail,
         contact_no: regPhone, password: regPass, role: regRole,
       };
 
       // Add role-specific fields
-      if (regRole === 'Admin') {
-        payload.department = regAdminDept;
-        payload.official_id = regAdminId;
-      } else if (regRole === 'Member') {
+      if (regRole === 'Member') {
         payload.group_name = regMemberGroup;
-        payload.address = regMemberAddr;
       }
       // Customer doesn't need extra fields
 
       await axios.post('/api/auth/register', payload);
       setRegOk('Account created successfully. You can now sign in.');
-      setRegName(''); setRegUser(''); setRegEmail('');
+      setRegName(''); setRegEmail('');
       setRegPhone(''); setRegPass('');
-      setRegAdminDept(''); setRegAdminId('');
-      setRegMemberGroup(''); setRegMemberAddr('');
+      setRegMemberGroup('');
       setTimeout(() => { setTab('signin'); setRegOk(''); }, 2200);
     } catch (err) {
       setRegErr(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -162,7 +152,6 @@ const Login = () => {
 
         {/* brand header */}
         <div style={s.brandRow}>
-          <div style={s.logoMark}>KM</div>
           <div>
             <div style={s.brandName}>SakhiConnect</div>
             <div style={s.brandTagline}>Empowering Women · Nagpur, Maharashtra</div>
@@ -237,7 +226,6 @@ const Login = () => {
               <label style={s.label}>I am a</label>
               <div style={s.roleRow}>
                 {[
-                  { key: 'Admin', desc: 'Platform Admin' },
                   { key: 'Member', desc: 'Group Member' },
                   { key: 'Customer', desc: 'Customer / Buyer' },
                 ].map(r => (
@@ -252,41 +240,17 @@ const Login = () => {
 
             <Field icon={<IconUser />} label="Full Name" placeholder="Your full name"
               value={regName} onChange={e => setRegName(e.target.value)} />
-            <Field icon={<IconUser />} label="Username" placeholder="Choose a username"
-              value={regUser} onChange={e => setRegUser(e.target.value)} />
             <Field icon={<IconMail />} label="Email Address" type="email" placeholder="Your email address"
               value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+            <Field icon={<IconPhone />} label="Phone Number" type="tel" placeholder="10-digit mobile number"
+              value={regPhone} onChange={e => setRegPhone(e.target.value)} required={false} />
 
-            {/* ADMIN-SPECIFIC FIELDS */}
-            {regRole === 'Admin' && (
-              <>
-                <Field icon={<IconPhone />} label="Phone Number" type="tel" placeholder="10-digit mobile number"
-                  value={regPhone} onChange={e => setRegPhone(e.target.value)} required={false} />
-                <Field icon={<IconUser />} label="Department" placeholder="Your department name"
-                  value={regAdminDept} onChange={e => setRegAdminDept(e.target.value)} required={false} />
-                <Field icon={<IconUser />} label="Official ID" placeholder="Your official ID number"
-                  value={regAdminId} onChange={e => setRegAdminId(e.target.value)} required={false} />
-              </>
-            )}
+
 
             {/* MEMBER-SPECIFIC FIELDS */}
             {regRole === 'Member' && (
-              <>
-                <Field icon={<IconPhone />} label="Phone Number" type="tel" placeholder="10-digit mobile number"
-                  value={regPhone} onChange={e => setRegPhone(e.target.value)} required={false} />
-                <Field icon={<IconUser />} label="Group Name" placeholder="Your Bachatgat group name"
-                  value={regMemberGroup} onChange={e => setRegMemberGroup(e.target.value)} required={false} />
-                <Field icon={<IconUser />} label="Address" placeholder="Your residential address"
-                  value={regMemberAddr} onChange={e => setRegMemberAddr(e.target.value)} required={false} />
-              </>
-            )}
-
-            {/* CUSTOMER-SPECIFIC FIELDS */}
-            {regRole === 'Customer' && (
-              <>
-                <Field icon={<IconPhone />} label="Phone Number" type="tel" placeholder="10-digit mobile number"
-                  value={regPhone} onChange={e => setRegPhone(e.target.value)} required={false} />
-              </>
+              <Field icon={<IconUser />} label="Group Name" placeholder="Your Bachatgat group name"
+                value={regMemberGroup} onChange={e => setRegMemberGroup(e.target.value)} required={false} />
             )}
 
             <div style={s.fieldWrap}>

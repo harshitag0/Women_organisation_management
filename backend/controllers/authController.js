@@ -14,6 +14,11 @@ const generateToken = (id) => {
 const registerUser = async (req, res) => {
   const { role, username, password, name, email, contact_no, address, ...otherDetails } = req.body;
 
+  // Block admin registration via public API
+  if (role === 'Admin') {
+    return res.status(403).json({ message: 'Admin accounts cannot be created via registration.' });
+  }
+
   // Basic validation
   if (!role || !username || !password || !name) {
     return res.status(400).json({ message: 'Name, username, password and role are required.' });
@@ -70,6 +75,18 @@ const loginUser = async (req, res) => {
 
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  // Hardcoded admin credentials
+  if (username === 'admin' && password === '00000') {
+    const adminToken = jwt.sign({ id: 'admin_hardcoded', role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    return res.json({
+      _id: 'admin_hardcoded',
+      username: 'admin',
+      name: 'Administrator',
+      role: 'Admin',
+      token: adminToken,
+    });
   }
 
   try {
