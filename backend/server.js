@@ -12,27 +12,21 @@ connectDB();
 const app = express();
 
 // CORS configuration
-// NOTE: The cors package does NOT support glob patterns like 'https://*.vercel.app'
-// We use a function to dynamically allow localhost, our Vercel app, and any Vercel preview URL
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  'https://sharda-foundation.vercel.app',        // Production Vercel frontend
-  'https://krantijyotifoundation.vercel.app',     // Legacy / old Vercel deployment
+  'https://sharda-foundation.vercel.app',
+  'https://krantijyotifoundation.vercel.app',
+  'https://sakhiconnect.tech',           // Custom domain
+  'https://www.sakhiconnect.tech',       // www variant
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, curl, server-to-server)
     if (!origin) return callback(null, true);
-    // Allow exact matches
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    // Allow any *.vercel.app preview deployment
-    if (/^https:\/\/[a-zA-Z0-9-]+-[a-zA-Z0-9-]+\.vercel\.app$/.test(origin) ||
-        /^https:\/\/.+\.vercel\.app$/.test(origin)) {
-      return callback(null, true);
-    }
+    if (/^https:\/\/.+\.vercel\.app$/.test(origin)) return callback(null, true);
     callback(new Error(`CORS: Origin '${origin}' not allowed`));
   },
   credentials: true,
@@ -49,25 +43,24 @@ app.use((req, res, next) => {
   next();
 });
 
-const authRoutes = require('./routes/authRoutes');
-const productRoutes = require('./routes/productRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const loanRoutes = require('./routes/loanRoutes');
-const miscRoutes = require('./routes/miscRoutes');
-const memberRoutes = require('./routes/memberRoutes');
+const authRoutes         = require('./routes/authRoutes');
+const productRoutes      = require('./routes/productRoutes');
+const orderRoutes        = require('./routes/orderRoutes');
+const loanRoutes         = require('./routes/loanRoutes');
+const miscRoutes         = require('./routes/miscRoutes');
+const memberRoutes       = require('./routes/memberRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
+const paymentRoutes      = require('./routes/paymentRoutes');
 
 // Listen to routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/loans', loanRoutes);
-app.use('/api/members', memberRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/products',      productRoutes);
+app.use('/api/orders',        orderRoutes);
+app.use('/api/loans',         loanRoutes);
+app.use('/api/members',       memberRoutes);
 app.use('/api/announcements', announcementRoutes);
-app.use('/api/payment', paymentRoutes);
-// Mount miscRoutes LAST so /api/members, /api/orders etc. are not swallowed
-app.use('/api', miscRoutes); // Handles /api/events, /api/savings, /api/stats, /api/feedback
+app.use('/api/payment',       paymentRoutes);
+app.use('/api',               miscRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -76,7 +69,30 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   console.log(`CORS enabled for: ${ALLOWED_ORIGINS.join(', ')} + *.vercel.app`);
+
+  // ── Auto-seed admin on every startup ──────────────────────────────
+  // Ensures admin exists in BOTH local and production MongoDB
+  try {
+    const User = require('./models/User');
+    const existing = await User.findOne({ role: 'Admin' });
+    if (!existing) {
+      await User.create({
+        username: 'harshita',
+        password: '11111',          // plain text — pre-save hook hashes it
+        role:     'Admin',
+        name:     'Harshita (Admin)',
+        email:    'harshita@admin.com',
+      });
+      console.log('✅ Admin user auto-created: harshita / 11111');
+    } else {
+      console.log(`ℹ️  Admin already exists: ${existing.username}`);
+    }
+  } catch (e) {
+    console.error('⚠️  Admin seed error:', e.message);
+  }
+  // ──────────────────────────────────────────────────────────────────
 });
+
