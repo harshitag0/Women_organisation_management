@@ -180,7 +180,7 @@ const Login = () => {
 
             {siErr && <div style={s.errBox}>{siErr}</div>}
 
-            <Field icon={<IconUser />} label="Username" placeholder="Enter your username"
+            <Field icon={<IconMail />} label="Email or Username" placeholder="Enter your email or username"
               value={siUser} onChange={e => setSiUser(e.target.value)} />
 
             <div style={s.fieldWrap}>

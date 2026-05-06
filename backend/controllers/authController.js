@@ -71,14 +71,16 @@ const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-  const { username, password } = req.body;
+  // Accept 'identifier' (email OR username) with a fallback to legacy 'username' field
+  const { identifier, username: legacyUsername, password } = req.body;
+  const loginId = (identifier || legacyUsername || '').trim();
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required.' });
+  if (!loginId || !password) {
+    return res.status(400).json({ message: 'Username/email and password are required.' });
   }
 
   // Hardcoded admin credentials
-  if (username === 'admin' && password === '00000') {
+  if (loginId === 'admin' && password === '00000') {
     const adminToken = jwt.sign({ id: 'admin_hardcoded', role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '30d' });
     return res.json({
       _id: 'admin_hardcoded',
@@ -90,17 +92,24 @@ const loginUser = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ username });
+    // Try to find by email first, then fall back to username
+    const user = await User.findOne({
+      $or: [
+        { email: loginId },
+        { username: loginId },
+      ]
+    });
 
     if (user && (await user.matchPassword(password))) {
       res.json({
         _id: user._id,
         username: user.username,
+        name: user.name,
         role: user.role,
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid username or password.' });
+      res.status(401).json({ message: 'Invalid email/username or password.' });
     }
   } catch (error) {
     console.error('Login error:', error.message);
