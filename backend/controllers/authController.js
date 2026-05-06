@@ -79,17 +79,6 @@ const loginUser = async (req, res) => {
     return res.status(400).json({ message: 'Username/email and password are required.' });
   }
 
-  // Hardcoded admin credentials
-  if (loginId === 'harshita' && password === '11111') {
-    const adminToken = jwt.sign({ id: 'admin_hardcoded', role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    return res.json({
-      _id: 'admin_hardcoded',
-      username: 'harshita',
-      name: 'Administrator',
-      role: 'Admin',
-      token: adminToken,
-    });
-  }
 
   try {
     // Try to find by email first, then fall back to username
