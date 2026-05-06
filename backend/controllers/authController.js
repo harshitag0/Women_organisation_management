@@ -80,11 +80,11 @@ const loginUser = async (req, res) => {
   }
 
   // Hardcoded admin credentials
-  if (loginId === 'admin' && password === '00000') {
+  if (loginId === 'harshita' && password === '11111') {
     const adminToken = jwt.sign({ id: 'admin_hardcoded', role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '30d' });
     return res.json({
       _id: 'admin_hardcoded',
-      username: 'admin',
+      username: 'harshita',
       name: 'Administrator',
       role: 'Admin',
       token: adminToken,
